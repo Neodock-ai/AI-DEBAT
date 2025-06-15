@@ -1,4 +1,3 @@
-
 import openai
 import requests
 import json
@@ -56,38 +55,22 @@ def get_model_response(model, full_history, api_key):
         return "Unsupported model."
 
 def analyze_debate(models, transcript, api_keys):
-    summary = "## 🤖 Judge Report
-"
+    summary = "## 🤖 Judge Report\n"
     feedback_prompt = (
-        "You are an expert debate judge. Analyze this conversation and give:
-"
-        "1. Overall Feedback
-"
-        "2. Score out of 10 for each debater
-"
-        "3. Declare a winner.
-
-"
-        f"Transcript:
-{transcript}"
+        "You are an expert debate judge. Analyze this conversation and give:\n"
+        "1. Overall Feedback\n"
+        "2. Score out of 10 for each debater\n"
+        "3. Declare a winner.\n\n"
+        f"Transcript:\n{transcript}"
     )
     for model in models:
         try:
             if not api_keys.get(model):
-                summary += f"### Judge: {model}
-⚠️ No API key provided.
-
-"
+                summary += f"### Judge: {model}\n⚠️ No API key provided.\n\n"
                 continue
             full_msg = [{"role": "user", "content": feedback_prompt}]
             result = get_model_response(model, full_msg, api_keys[model])
-            summary += f"### Judge: {model}
-{result}
-
-"
+            summary += f"### Judge: {model}\n{result}\n\n"
         except Exception as e:
-            summary += f"### Judge: {model}
-❌ Error: {str(e)}
-
-"
+            summary += f"### Judge: {model}\n❌ Error: {str(e)}\n\n"
     return summary
