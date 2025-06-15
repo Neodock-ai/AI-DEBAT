@@ -53,11 +53,11 @@ def analyze_debate(models, transcript, api_keys):
     for model in models:
         try:
             summary += f"### Judge: {model}\n"
-            feedback_prompt = f"Analyze this AI debate and score both sides:
-
-{transcript}
-
-Provide: 1) Overall feedback, 2) Score out of 10 for each debater, 3) Declare a winner."
+            feedback_prompt = (
+                f"Analyze this AI debate and score both sides. "
+                f"Here is the transcript:\n\n{transcript}\n\n"
+                f"Provide: 1) Overall feedback, 2) Score out of 10 for each debater, 3) Declare a winner."
+            )
             response = get_model_response(model, feedback_prompt, api_keys[model])
             summary += response + "\n\n"
         except Exception as e:
