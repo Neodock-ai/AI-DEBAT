@@ -57,12 +57,14 @@ def get_model_response(model, full_history, api_key):
 
 def analyze_debate(models, transcript, api_keys):
     summary = "## 🤖 Judge Report\n"
-    prompt = (
+    feedback_prompt = (
         f"You are an expert debate judge. Analyze this conversation and give:
 "
         f"1. Overall Feedback
-2. Score out of 10 for each debater
-3. Declare a winner.
+"
+        f"2. Score out of 10 for each debater
+"
+        f"3. Declare a winner.
 
 "
         f"Transcript:
@@ -76,7 +78,7 @@ def analyze_debate(models, transcript, api_keys):
 
 "
                 continue
-            full_msg = [{"role": "user", "content": prompt}]
+            full_msg = [{"role": "user", "content": feedback_prompt}]
             result = get_model_response(model, full_msg, api_keys[model])
             summary += f"### Judge: {model}
 {result}
