@@ -1,4 +1,3 @@
-
 import streamlit as st
 from utils import get_model_response, analyze_debate
 
@@ -39,17 +38,21 @@ with col2:
 
 # Debate logic
 if st.session_state.debating:
-    if st.session_state.turn == 0:
-        prompt = topic
-    else:
-        prompt = st.session_state.debate_history[-1]["text"]
-
     current_debater = debater_1 if st.session_state.turn % 2 == 0 else debater_2
     current_api_key = api_key_1 if current_debater == debater_1 else api_key_2
 
+    full_history = []
+    if st.session_state.turn == 0:
+        full_history.append({"role": "user", "content": topic})
+    else:
+        for i, entry in enumerate(st.session_state.debate_history):
+            role = "user" if i % 2 == 0 else "assistant"
+            full_history.append({"role": role, "content": entry["text"]})
+        full_history.append({"role": "user", "content": st.session_state.debate_history[-1]["text"]})
+
     with st.spinner(f"{current_debater} is thinking..."):
         try:
-            response = get_model_response(current_debater, prompt, current_api_key)
+            response = get_model_response(current_debater, full_history, current_api_key)
             st.session_state.debate_history.append({"speaker": current_debater, "text": response})
             st.session_state.turn += 1
         except Exception as e:
@@ -67,7 +70,7 @@ if st.button("📊 Analyze Debate"):
         judge_keys[judge] = st.sidebar.text_input(f"API Key for Judge: {judge}", type="password", key=f"judge_{judge}")
     transcript = "\n".join([f"{e['speaker']}: {e['text']}" for e in st.session_state.debate_history])
     report = analyze_debate(judges, transcript, judge_keys)
-    st.text_area("🧾 Debate Analysis Report", report, height=300)
+    st.text_area("🗞 Debate Analysis Report", report, height=300)
 
     b64 = report.encode("utf-8").hex()
-    st.markdown(f'<a href="data:file/txt;base64,{b64}" download="debate_analysis.txt">📥 Download Report</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="data:file/txt;base64,{b64}" download="debate_analysis.txt">👅 Download Report</a>', unsafe_allow_html=True)
