@@ -56,15 +56,16 @@ def get_model_response(model, full_history, api_key):
         return "Unsupported model."
 
 def analyze_debate(models, transcript, api_keys):
-    summary = "## 🤖 Judge Report\n"
+    summary = "## 🤖 Judge Report
+"
     feedback_prompt = (
-        f"You are an expert debate judge. Analyze this conversation and give:
+        "You are an expert debate judge. Analyze this conversation and give:
 "
-        f"1. Overall Feedback
+        "1. Overall Feedback
 "
-        f"2. Score out of 10 for each debater
+        "2. Score out of 10 for each debater
 "
-        f"3. Declare a winner.
+        "3. Declare a winner.
 
 "
         f"Transcript:
