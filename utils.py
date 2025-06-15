@@ -5,14 +5,14 @@ import json
 
 def get_model_response(model, prompt, api_key):
     if "OpenAI" in model:
-        openai.api_key = api_key
+        client = openai.OpenAI(api_key=api_key)
         model_engine = "gpt-3.5-turbo" if "3.5" in model else "gpt-4"
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=model_engine,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
         )
-        return response.choices[0].message["content"].strip()
+        return response.choices[0].message.content.strip()
 
     elif "Claude" in model:
         url = "https://api.anthropic.com/v1/messages"
