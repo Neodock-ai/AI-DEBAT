@@ -26,6 +26,9 @@ if "turn" not in st.session_state:
 if "debating" not in st.session_state:
     st.session_state.debating = False
 
+if "max_turns" not in st.session_state:
+    st.session_state.max_turns = 10
+
 col1, col2 = st.columns([1, 1])
 with col1:
     if st.button("▶️ Start Debate") and topic:
@@ -36,32 +39,41 @@ with col2:
     if st.button("⏹️ Stop Debate"):
         st.session_state.debating = False
 
+# Live unfolding debate
+st.subheader("📝 Live Debate Transcript")
+debate_placeholder = st.empty()
+
 # Debate logic
-if st.session_state.debating:
+if st.session_state.debating and st.session_state.turn < st.session_state.max_turns:
     current_debater = debater_1 if st.session_state.turn % 2 == 0 else debater_2
     current_api_key = api_key_1 if current_debater == debater_1 else api_key_2
 
-    full_history = []
+    history = []
     if st.session_state.turn == 0:
-        full_history.append({"role": "user", "content": topic})
+        history.append({"role": "system", "content": f"You are {current_debater}, an expert debater. Defend your position on the topic: '{topic}' and respond directly to your opponent's arguments."})
+        history.append({"role": "user", "content": f"Begin the debate on: {topic}"})
     else:
-        for i, entry in enumerate(st.session_state.debate_history):
-            role = "user" if i % 2 == 0 else "assistant"
-            full_history.append({"role": role, "content": entry["text"]})
-        full_history.append({"role": "user", "content": st.session_state.debate_history[-1]["text"]})
+        for i, turn in enumerate(st.session_state.debate_history):
+            role = "user" if i % 2 == 1 else "assistant"
+            history.append({"role": role, "content": f"{turn['speaker']}: {turn['text']}"})
 
     with st.spinner(f"{current_debater} is thinking..."):
         try:
-            response = get_model_response(current_debater, full_history, current_api_key)
+            response = get_model_response(current_debater, history, current_api_key)
             st.session_state.debate_history.append({"speaker": current_debater, "text": response})
             st.session_state.turn += 1
+            transcript = "\n\n".join([f"**{entry['speaker']}**: {entry['text']}" for entry in st.session_state.debate_history])
+            debate_placeholder.markdown(transcript, unsafe_allow_html=True)
         except Exception as e:
             st.error(f"Error from {current_debater}: {str(e)}")
             st.session_state.debating = False
+elif st.session_state.turn >= st.session_state.max_turns:
+    st.session_state.debating = False
+    st.info("✅ Debate completed. You can now analyze the debate.")
 
-st.subheader("📝 Debate Transcript")
-for entry in st.session_state.debate_history:
-    st.markdown(f"**{entry['speaker']}**: {entry['text']}")
+if not st.session_state.debating:
+    transcript = "\n\n".join([f"**{entry['speaker']}**: {entry['text']}" for entry in st.session_state.debate_history])
+    debate_placeholder.markdown(transcript, unsafe_allow_html=True)
 
 if st.button("📊 Analyze Debate"):
     judges = [m for m in models if m not in [debater_1, debater_2]]
@@ -70,7 +82,7 @@ if st.button("📊 Analyze Debate"):
         judge_keys[judge] = st.sidebar.text_input(f"API Key for Judge: {judge}", type="password", key=f"judge_{judge}")
     transcript = "\n".join([f"{e['speaker']}: {e['text']}" for e in st.session_state.debate_history])
     report = analyze_debate(judges, transcript, judge_keys)
-    st.text_area("🗞 Debate Analysis Report", report, height=300)
+    st.text_area("🧾 Debate Analysis Report", report, height=300)
 
     b64 = report.encode("utf-8").hex()
-    st.markdown(f'<a href="data:file/txt;base64,{b64}" download="debate_analysis.txt">👅 Download Report</a>', unsafe_allow_html=True)
+    st.markdown(f'<a href="data:file/txt;base64,{b64}" download="debate_analysis.txt">📥 Download Report</a>', unsafe_allow_html=True)
